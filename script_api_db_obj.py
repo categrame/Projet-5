@@ -12,59 +12,6 @@ class OpenFoodFactsReq:
         self.conn = mysql.connector.connect(host="localhost",user="root",password="felati61", database="test2")
         self.cursor = self.conn.cursor()
 
-
-    def clear_db(self):
-        self.cursor.execute("""
-        DROP TABLE categories, food, healthy_food;
-        """)
-
-
-    def create_db(self):
-        self.cursor.execute("""
-        CREATE TABLE IF NOT EXISTS categories (
-        id int(5) NOT NULL AUTO_INCREMENT,
-        name_fr varchar(50) DEFAULT NULL,
-        name_en varchar(50) DEFAULT NULL,
-        PRIMARY KEY(id)
-        );
-        """)
-        self.cursor.execute("""
-        CREATE TABLE IF NOT EXISTS healthy_food (
-        id int(5) NOT NULL AUTO_INCREMENT,
-        name varchar(250) DEFAULT NULL,
-        categorie varchar(50) DEFAULT NULL,
-        barcode varchar(20) DEFAULT NULL,
-        fat_value float(5) DEFAULT NULL,
-        salt_value float(5) DEFAULT NULL,
-        sugars float(5) DEFAULT NULL,
-        brands varchar(250) DEFAULT NULL,
-        no_match varchar(50) DEFAULT NULL,
-        PRIMARY KEY(id)
-        );
-        """)
-        self.cursor.execute("""
-        CREATE TABLE IF NOT EXISTS food (
-        id int(5) NOT NULL AUTO_INCREMENT,
-        name varchar(250) DEFAULT NULL,
-        categories4 varchar(100) DEFAULT NULL,
-        categories_main varchar(50) DEFAULT NULL,
-        nutrition_score varchar(2) DEFAULT NULL,
-        fat_value float(5) DEFAULT NULL,
-        salt_value float(5) DEFAULT NULL,
-        sugars float(5) DEFAULT NULL,
-        brands varchar(250) DEFAULT NULL,
-        barcode varchar(20) DEFAULT NULL,
-        PRIMARY KEY(id)
-        );
-        """)
-
-    def display_categories(self):
-        display_something = ("SELECT name_fr, name_en FROM categories") #The SQL query
-        self.cursor.execute(display_something) #We execute the request
-        row_saved = self.cursor.fetchall() #Organize the data
-        for saved_row in row_saved: #For loop to print all data
-            print(saved_row)
-
     def add_category(self,how_many):
         api_url_fr = "https://fr.openfoodfacts.org/categories.json"
         api_url_en = "https://fr-en.openfoodfacts.org/categories.json"
@@ -134,8 +81,6 @@ class OpenFoodFactsReq:
                             self.cursor.execute(adding_food,(category_done['products'][id_3]['product_name'], product_barcode_done['product']['categories_tags'][5], category_saved, product_barcode_done['product']['nutrition_grades_tags'][0], product_barcode_done['product']['nutriments']['fat_value'], product_barcode_done['product']['nutriments']['salt_value'], product_barcode_done['product']['nutriments']['sugars'], category_done['products'][id_3]['codes_tags'][1], product_barcode_done['product']['brands']))
                             self.conn.commit()
 
-                            print(id_2)
-
                             id_2 = id_2 + 1
                             id_3 = id_3 + 1
 
@@ -171,9 +116,6 @@ class OpenFoodFactsReq:
 
         while test_2 < ((nb_products-1)*(nb_categories_2-1))+1:
 
-            print("deuxieme palier")
-            print(test_2)
-            print(nb_products*nb_categories_2)
 
             no_match_oui = "Pas de produit"
 
@@ -223,9 +165,6 @@ class OpenFoodFactsReq:
                 request_category_healthy = requests.get(pre_api_category_healthy)
                 category_done_healthy = request_category_healthy.json()
 
-            print(produit_compteur)
-            print(test_2_str)
-
             if produit_compteur == len(category_done_healthy['products']) or produit_compteur == 19:
                 print("Pas de correspondance trouvée")
                 inserting_no_match = ("INSERT IGNORE INTO healthy_food (no_match) VALUES (%s)")
@@ -259,7 +198,7 @@ class OpenFoodFactsReq:
                 produit_compteur = produit_compteur + 1
 
             if test_2 == nb_products*nb_categories_2:
-                print("Quand tout est accomplit on sort de la page")
+                print("Tout les items sont entrés dans la base")
                 test_1 = test_1 + 1
                 test_2 = 1
                 page_test = 1
