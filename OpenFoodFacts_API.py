@@ -13,12 +13,12 @@ name.clear_db()
 
 name.create_db()
 
-name.add_category(5)
+name.add_category(11)
 
 name.display_categories()
 
-name.add_food(5,6)
+name.add_food(11,6)
 
-name.add_healthy_food(5,6)
+name.add_healthy_food(11,6)
 
 
