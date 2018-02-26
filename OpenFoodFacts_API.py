@@ -8,7 +8,14 @@ from bs4 import BeautifulSoup
 from script_api_db_obj import *
 from db_creation import *
 
-db_connect = DbConnect("localhost","root","felati61","test2")
+
+#Variable to connect to MySQL database
+host = "localhost"
+user = "root"
+password = "felati61"
+database = "test2"
+
+db_connect = DbConnect(host,user,password,database)
 
 db_connect.clear_db()
 
@@ -16,13 +23,13 @@ db_connect.create_db()
 
 APIReq = OpenFoodFactsReq()
 
-APIReq.add_category(11)
+APIReq.add_category(10)
 
 APIReq.add_food(11,6)
 
 APIReq.add_healthy_food(11,6)
 
-conn = mysql.connector.connect(host="localhost",user="root",password="felati61", database="test2")
+conn = mysql.connector.connect(host=host,user=user,password=password, database=database)
 cursor = conn.cursor()
 
 loop_1 = 1
@@ -58,6 +65,7 @@ while loop_1:
 			if quit_loop_1_1 == 1:
 				loop_1_1 = 0
 			elif quit_loop_1_1 == 2:
+				quit()
 				sys.exit()
 		except:
 			print("Je n'ai pas compris la réponse")
@@ -129,8 +137,8 @@ while loop_1:
 						ask_register_bdd = int(input())
 
 						if ask_register_bdd == 1:
-							add_in_my_products = ("INSERT INTO my_products (name, categories, link) VALUES (%s,%s,%s)")
-							cursor.execute(add_in_my_products,(rows7,rows6,details_final,))
+							add_in_my_products = ("INSERT INTO my_products (name, link) VALUES (%s,%s)")
+							cursor.execute(add_in_my_products,(rows7,details_final,))
 							conn.commit()
 							print("Le produit est bien enregistré dans la base.")
 							#Here we asks the user to choose if she/he wants to choose another product to substitute, return to the main menu or leave the program
@@ -166,6 +174,7 @@ while loop_1:
 									loop_3 = 0
 									loop_2 = 0
 								elif ask_another_one == 3:
+									quit()
 									sys.exit()
 							except:
 								print("Je n'ai pas compris la réponse veuillez recommencer")

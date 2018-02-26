@@ -6,6 +6,8 @@ import urllib.request
 from bs4 import BeautifulSoup
 import sys
 
+#class to connect to the database and create tables
+
 class DbConnect:
 
 	def __init__(self,host,user,password,database):
@@ -18,7 +20,7 @@ class DbConnect:
 		
 	def clear_db(self):
 		self.cursor.execute("""
-		DROP TABLE categories, food, healthy_food;
+		DROP TABLE categories, food, healthy_food, my_products;
 		""")
 
 	def create_db(self):

@@ -9,10 +9,12 @@ import sys
 class OpenFoodFactsReq:
 
     def __init__(self):
+        #Initiate the connection to the base
         self.conn = mysql.connector.connect(host="localhost",user="root",password="felati61", database="test2")
         self.cursor = self.conn.cursor()
 
     def add_category(self,how_many):
+        #get category on the categories page in json format
         api_url_fr = "https://fr.openfoodfacts.org/categories.json"
         api_url_en = "https://fr-en.openfoodfacts.org/categories.json"
         self.how_many = how_many
@@ -23,12 +25,14 @@ class OpenFoodFactsReq:
         response_data_en = request_data_en.json()
 
         while i<how_many:
+            #Insert categories into the database
             add_data = ("INSERT IGNORE INTO categories (name_fr, name_en) VALUES (%s,%s)")
             self.cursor.execute(add_data,(response_data_fr['tags'][i]['name'],response_data_en['tags'][i]['name'],))
             self.conn.commit()
             i = i+1
 
     def add_food(self, nb_category, nb_food_per_category):
+        #This function search and register the products per category
         self.nb_food_per_category = nb_food_per_category 
         self.nb_category = nb_category
         id_i = 1
@@ -71,10 +75,12 @@ class OpenFoodFactsReq:
                     product_barcode_done = request_product_barcode.json()
 
                     try:
+                        #Check if the indexes and keys are correct
                         product_barcode_done['product']['nutriments']['fat_value']
                         product_barcode_done['product']['nutriments']['salt_value']
                         product_barcode_done['product']['nutriments']['sugars']
 
+                        #Conditions for a product and add it to the database
                         if len(product_barcode_done['product']['categories_tags']) > 5 and category_done['products'][id_3]['product_name'] != "" and product_barcode_done['product']['nutrition_grades_tags'][0] != "" and product_barcode_done['product']['nutrition_grades_tags'][0] != "unknown" and product_barcode_done['product']['nutrition_grades_tags'][0] != "not-applicable":
 
                             adding_food = ("INSERT IGNORE INTO food (name, categories4, categories_main, nutrition_score, fat_value, salt_value, sugars, barcode, brands) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)")
@@ -83,7 +89,7 @@ class OpenFoodFactsReq:
 
                             id_2 = id_2 + 1
                             id_3 = id_3 + 1
-
+                        #We know there is 20 products per page. So at 20 products, we go for the next page
                         elif len(category_done['products'])>=20:
                             page_id = page_id + 1
                             id_3 = 1
@@ -94,7 +100,7 @@ class OpenFoodFactsReq:
                             id_3 = id_3 + 1
                     except (KeyError,IndexError):
                         id_3 = id_3 + 1
-
+                #When all the products of the category are in database, we go for the next category.
                 if id_2 == nb_food_per_category:       
                     id_i = id_i + 1
                     page_id = 1            
@@ -103,6 +109,7 @@ class OpenFoodFactsReq:
 
 
     def add_healthy_food(self, nb_categories_2, nb_products):
+        #Here, we add healthy food compare to the product in database
         self.nb_categories_2 = nb_categories_2
         self.nb_products = nb_products
         test_1 = 1
@@ -115,9 +122,6 @@ class OpenFoodFactsReq:
 
 
         while test_2 < ((nb_products-1)*(nb_categories_2-1))+1:
-
-
-            no_match_oui = "Pas de produit"
 
             request_healthy = ("SELECT categories4 FROM food WHERE id = "+test_2_str+"")
             self.cursor.execute(request_healthy)
@@ -143,6 +147,7 @@ class OpenFoodFactsReq:
             if request_healthy_done.startswith('en:'):
 
                 try:
+                    #if the category is in english, we convert it into french to find the category page. I use beautiful soup to find meta data in the html page
                     pre_api_category_healthy = "https://fr.openfoodfacts.org/categorie/"+request_healthy_done+".json"
                     content = urllib.request.urlopen(pre_api_category_healthy).read()
 
@@ -161,10 +166,12 @@ class OpenFoodFactsReq:
                     produit_compteur = produit_compteur + 1
 
             else:
+                #If the category is in french, we load it immediately into json
                 pre_api_category_healthy = "https://fr.openfoodfacts.org/categorie/"+request_healthy_done+".json"
                 request_category_healthy = requests.get(pre_api_category_healthy)
                 category_done_healthy = request_category_healthy.json()
 
+            #We check if we find product. If we don't find product, we add no substitute.
             if produit_compteur == len(category_done_healthy['products']) or produit_compteur == 19:
                 print("Pas de correspondance trouvée")
                 inserting_no_match = ("INSERT IGNORE INTO healthy_food (no_match) VALUES (%s)")
@@ -179,6 +186,7 @@ class OpenFoodFactsReq:
                 category_done_healthy['products'][produit_compteur]['nutriments']['fat_value']
                 category_done_healthy['products'][produit_compteur]['nutriments']['sugars']
 
+                #We check if the subistute have less fat or sugar
                 if request_healthy_done_3 != category_done_healthy['products'][produit_compteur]['product_name'] and float(category_done_healthy['products'][produit_compteur]['nutriments']['fat_value']) < request_healthy_done_4 or float(category_done_healthy['products'][produit_compteur]['nutriments']['sugars']) < request_healthy_done_5 or float(category_done_healthy['products'][produit_compteur]['nutriments']['salt_value']) < request_healthy_done_6:
 
                     get_healthy_food = ("INSERT IGNORE INTO healthy_food (name, categorie, barcode, fat_value, salt_value, sugars, brands) VALUES (%s,%s,%s,%s,%s,%s,%s)")
@@ -196,7 +204,7 @@ class OpenFoodFactsReq:
 
             except (KeyError,IndexError):
                 produit_compteur = produit_compteur + 1
-
+            #When it's finish, we quit the loop
             if test_2 == nb_products*nb_categories_2:
                 print("Tout les items sont entrés dans la base")
                 test_1 = test_1 + 1
